@@ -36,6 +36,10 @@ class Validator
     /**
      * @var array
      */
+    protected $_violations = array();
+    /**
+     * @var array
+     */
     protected $_labels = array();
 
     /**
@@ -954,13 +958,28 @@ class Validator
     }
 
     /**
+     * Get array of violations messages
+     *
+     * @param  null|string $field
+     * @return array|bool
+     */
+    public function violations($field = null)
+    {
+        if ($field !== null) {
+            return isset($this->_violations[$field]) ? $this->_violations[$field] : false;
+        }
+
+        return $this->_violations;
+    }
+
+    /**
      * Add an error to error messages array
      *
      * @param string $field
      * @param string $message
      * @param array  $params
      */
-    public function error($field, $message, array $params = array())
+    public function error($field, $message, array $params = array(), $rule)
     {
         $message = $this->checkAndSetLabel($field, $message, $params);
 
@@ -987,6 +1006,7 @@ class Validator
         }
 
         $this->_errors[$field][] = vsprintf($message, $values);
+        $this->_violations[$field][]=array("rule"=>$rule, "message"=>vsprintf($message, $values));
     }
 
     /**
@@ -1099,7 +1119,7 @@ class Validator
                 }
 
                 if (!$result) {
-                    $this->error($field, $v['message'], $v['params']);
+                    $this->error($field, $v['message'], $v['params'], $v['rule']);
                     if ($this->stop_on_first_fail) {
                         $set_to_break = true;
                         break;
